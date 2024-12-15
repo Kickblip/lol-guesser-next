@@ -1,4 +1,4 @@
-const champKey: Record<string, string> = {
+const champMap: Record<string, string> = {
   "Aatrox_OriginalSkin.webp": "aatrox",
   "Ahri_OriginalSkin.webp": "ahri",
   "Akali_OriginalSkin.webp": "akali",
@@ -168,4 +168,4 @@ const champKey: Record<string, string> = {
   "Naafiri_OriginalSkin.webp": "naafiri",
 };
 
-export default champKey;
+export default champMap;
