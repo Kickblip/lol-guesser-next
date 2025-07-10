@@ -60,11 +60,11 @@ export default function GameWindow() {
     const keys = Object.keys(champMap);
     const randomKey = keys[Math.floor(Math.random() * keys.length)];
 
-    setImage(randomKey);
-    setAnswer(champMap[randomKey]);
+    setImage(champMap[randomKey]);
+    setAnswer(randomKey);
 
     try {
-      const url = `/champs/${randomKey}`;
+      const url = `/champs/${champMap[randomKey]}`;
       const pixelated = await pixelateImage(url, pixelationFactor);
       setPixelatedSrc(pixelated);
     } catch (error) {
@@ -80,7 +80,7 @@ export default function GameWindow() {
       .trim();
 
     if (formattedGuess === answer) {
-      // coorect guess
+      // correct guess
       refreshImage();
     } else {
       // wrong guess
@@ -119,7 +119,6 @@ export default function GameWindow() {
           height={700}
         />
       )}
-
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -135,10 +134,10 @@ export default function GameWindow() {
           onChange={(e) => setGuess(e.target.value)}
         />
         <button
-          className="bg-blue-500 hover:bg-blue-700 transition duration-200 text-white p-2 rounded-r w-1/5"
+          className="bg-orange-500 hover:bg-orange-700 transition duration-200 text-white p-2 rounded-r w-1/5"
           type="submit"
         >
-          Submit
+          Guess
         </button>
       </form>
     </div>

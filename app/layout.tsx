@@ -16,7 +16,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: `
+                (function () {
+                  var msg = '🚨  CHEATER! Get out of here 🚨';
+                  document.body.prepend(document.createComment(' ' + msg + ' '));
+                })();
+              `,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

@@ -1,4 +1,4 @@
-import GameWindow from "@/components/GameWindow";
+import GameWindow from "@/app/GameWindow";
 
 export default function Home() {
   return (
