@@ -2,14 +2,15 @@
 
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import champMap from "@/utils/champMap";
+import { answerMap, splashartMap } from "@/utils/maps";
 
 export default function GameWindow() {
   const [image, setImage] = useState("");
-  const [answer, setAnswer] = useState("");
+  const [answer, setAnswer] = useState<string[]>([]);
   const [guess, setGuess] = useState("");
   const [pixelatedSrc, setPixelatedSrc] = useState("");
   const [pixelationFactor, setPixelationFactor] = useState(40);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     refreshImage();
@@ -57,14 +58,14 @@ export default function GameWindow() {
   const refreshImage = async () => {
     setPixelationFactor(40);
 
-    const keys = Object.keys(champMap);
+    const keys = Object.keys(splashartMap);
     const randomKey = keys[Math.floor(Math.random() * keys.length)];
 
-    setImage(champMap[randomKey]);
-    setAnswer(randomKey);
+    setImage(splashartMap[randomKey]);
+    setAnswer(answerMap[randomKey]);
 
     try {
-      const url = `/champs/${champMap[randomKey]}`;
+      const url = `/champs/${splashartMap[randomKey]}`;
       const pixelated = await pixelateImage(url, pixelationFactor);
       setPixelatedSrc(pixelated);
     } catch (error) {
@@ -79,11 +80,13 @@ export default function GameWindow() {
       .replace(/[^a-z]/g, "")
       .trim();
 
-    if (formattedGuess === answer) {
-      // correct guess
+    if (answer.includes(formattedGuess)) {
+      setMessage("✅ 🎉");
+      setTimeout(() => setMessage(""), 500);
       refreshImage();
     } else {
-      // wrong guess
+      setMessage("❌ 😿");
+      setTimeout(() => setMessage(""), 500);
       const newFactor = Math.max(5, pixelationFactor - 5);
       setPixelationFactor(newFactor);
 
@@ -99,20 +102,11 @@ export default function GameWindow() {
   }
 
   return (
-    <div>
-      {pixelatedSrc ? (
+    <div className="flex flex-col items-center">
+      {pixelatedSrc && (
         // show pixelated when done
-        <img
-          src={pixelatedSrc}
-          alt="Guess league champ"
-          className="rounded"
-          width={700}
-          height={700}
-        />
-      ) : (
-        // fallback to original
         <Image
-          src={`/champs/${image}`}
+          src={pixelatedSrc}
           alt="Guess league champ"
           className="rounded"
           width={700}
@@ -140,6 +134,14 @@ export default function GameWindow() {
           Guess
         </button>
       </form>
+
+      <h1
+        className={`text-5xl font-bold mt-8 ${
+          message ? "text-black" : "text-white"
+        }`}
+      >
+        {message || "."}
+      </h1>
     </div>
   );
 }
