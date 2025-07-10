@@ -7,10 +7,13 @@ import { answerMap, splashartMap } from "@/utils/maps";
 export default function GameWindow() {
   const [image, setImage] = useState("");
   const [answer, setAnswer] = useState<string[]>([]);
+  const [randomKey, setRandomKey] = useState("");
   const [guess, setGuess] = useState("");
   const [pixelatedSrc, setPixelatedSrc] = useState("");
   const [pixelationFactor, setPixelationFactor] = useState(40);
   const [message, setMessage] = useState("");
+  const [alreadyGuessed, setAlreadyGuessed] = useState<string[]>([]);
+  const [remainingChamps, setRemainingChamps] = useState<string[]>([]);
 
   useEffect(() => {
     refreshImage();
@@ -58,14 +61,23 @@ export default function GameWindow() {
   const refreshImage = async () => {
     setPixelationFactor(40);
 
-    const keys = Object.keys(splashartMap);
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+    let keys = Object.keys(splashartMap);
+    let rand = "";
+    if (remainingChamps.length === 0) {
+      setRemainingChamps(keys);
+      rand = keys[Math.floor(Math.random() * keys.length)];
+    } else {
+      rand =
+        remainingChamps[Math.floor(Math.random() * remainingChamps.length)];
+    }
 
-    setImage(splashartMap[randomKey]);
-    setAnswer(answerMap[randomKey]);
+    setRandomKey(rand);
+
+    setImage(splashartMap[rand]);
+    setAnswer(answerMap[rand]);
 
     try {
-      const url = `/champs/${splashartMap[randomKey]}`;
+      const url = `/champs/${splashartMap[rand]}`;
       const pixelated = await pixelateImage(url, pixelationFactor);
       setPixelatedSrc(pixelated);
     } catch (error) {
@@ -83,6 +95,7 @@ export default function GameWindow() {
     if (answer.includes(formattedGuess)) {
       setMessage("✅ 🎉");
       setTimeout(() => setMessage(""), 500);
+      setAlreadyGuessed((prev) => [...prev, randomKey]);
       refreshImage();
     } else {
       setMessage("❌ 😿");
@@ -103,6 +116,9 @@ export default function GameWindow() {
 
   return (
     <div className="flex flex-col items-center">
+      <h1 className="text-2xl mb-4">
+        {alreadyGuessed.length}/{Object.keys(splashartMap).length}
+      </h1>
       {pixelatedSrc && (
         // show pixelated when done
         <Image

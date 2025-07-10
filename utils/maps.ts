@@ -197,7 +197,7 @@ export const answerMap: Record<string, string[]> = {
   draven: ["draven"],
   ekko: ["ekko"],
   elise: ["elise"],
-  evelynn: ["evelynn"],
+  evelynn: ["evelynn", "evelyn"],
   ezreal: ["ezreal"],
   fiddlesticks: ["fiddlesticks"],
   fiora: ["fiora"],
