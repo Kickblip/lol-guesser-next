@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   openGraph: {
     url: "https://guesser.inhousetracker.com/",
     title: "LoL Guesser",
-    description: "TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE",
+    description:
+      "TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE",
     siteName: "Inhouse Tracker",
     images: [
       {
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "LoL Guesser",
-    description: "TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE",
+    description:
+      "TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE TOP SCORE",
     images: {
       url: "https://guesser.inhousetracker.com/ogimage.jpg",
       alt: "Pixel image",
