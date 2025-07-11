@@ -3,8 +3,9 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { answerMap, splashartMap } from "@/utils/maps";
+import GameOver from "./GameOver";
 
-const LENGTH = 25;
+const LENGTH = 10;
 
 export default function GameWindow() {
   const [image, setImage] = useState("");
@@ -19,17 +20,21 @@ export default function GameWindow() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState<number>(0);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [penalty, setPenalty] = useState<number>(0);
+  const [gameOver, setGameOver] = useState<boolean>(false);
 
   useEffect(() => {
     refreshImage();
   }, []);
 
   useEffect(() => {
-    if (alreadyGuessed.length === LENGTH && timerRef.current) {
-      clearInterval(timerRef.current);
+    if (alreadyGuessed.length === LENGTH && !gameOver) {
+      // stop timer and end the game
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
+      setGameOver(true);
     }
-  }, [alreadyGuessed]);
+  }, [alreadyGuessed, gameOver]);
 
   useEffect(() => {
     return () => {
@@ -127,6 +132,7 @@ export default function GameWindow() {
     } else {
       setMessage("❌ 😿");
       setTimeout(() => setMessage(""), 500);
+      setPenalty((p) => p + 5);
       const newFactor = Math.max(5, pixelationFactor - 5);
       setPixelationFactor(newFactor);
 
@@ -141,12 +147,19 @@ export default function GameWindow() {
     return <p>Loading...</p>;
   }
 
+  const displaySeconds = elapsed + penalty;
+  const mmss = new Date(displaySeconds * 1000).toISOString().substring(14, 19);
+
+  if (gameOver) {
+    return <GameOver mmss={mmss} seconds={displaySeconds} />;
+  }
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center font-mono">
       <h1 className="text-2xl mb-4">
         {alreadyGuessed.length}/{LENGTH}
         {" • "}
-        {new Date(elapsed * 1000).toISOString().substring(14, 19)} {/* mm:ss */}
+        {mmss}
       </h1>
       {pixelatedSrc && (
         // show pixelated when done
@@ -173,7 +186,7 @@ export default function GameWindow() {
           onChange={(e) => setGuess(e.target.value)}
         />
         <button
-          className="bg-orange-500 hover:bg-orange-700 transition duration-200 text-white p-2 rounded-r w-1/5"
+          className="bg-gray-800 hover:bg-gray-900 transition duration-200 text-white p-2 rounded-r w-1/5"
           type="submit"
         >
           Guess

@@ -283,7 +283,7 @@ export const answerMap: Record<string, string[]> = {
   sett: ["sett"],
   shaco: ["shaco"],
   shen: ["shen"],
-  shyvana: ["shyvana"],
+  shyvana: ["shyvana", "shyvanna"],
   singed: ["singed"],
   sion: ["sion"],
   sivir: ["sivir"],
