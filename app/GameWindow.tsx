@@ -4,6 +4,8 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { answerMap, splashartMap } from "@/utils/maps";
 
+const LENGTH = 25;
+
 export default function GameWindow() {
   const [image, setImage] = useState("");
   const [answer, setAnswer] = useState<string[]>([]);
@@ -14,9 +16,25 @@ export default function GameWindow() {
   const [message, setMessage] = useState("");
   const [alreadyGuessed, setAlreadyGuessed] = useState<string[]>([]);
   const [remainingChamps, setRemainingChamps] = useState<string[]>([]);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState<number>(0);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     refreshImage();
+  }, []);
+
+  useEffect(() => {
+    if (alreadyGuessed.length === LENGTH && timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, [alreadyGuessed]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
   const pixelateImage = (url: string, sampleSize = 10): Promise<string> => {
@@ -87,6 +105,15 @@ export default function GameWindow() {
   };
 
   const handleGuess = async () => {
+    if (startTime === null) {
+      const now = Date.now();
+      setStartTime(now);
+      timerRef.current = setInterval(
+        () => setElapsed(Math.floor((Date.now() - now) / 1000)),
+        1000
+      );
+    }
+
     const formattedGuess = guess
       .toLowerCase()
       .replace(/[^a-z]/g, "")
@@ -117,7 +144,9 @@ export default function GameWindow() {
   return (
     <div className="flex flex-col items-center">
       <h1 className="text-2xl mb-4">
-        {alreadyGuessed.length}/{Object.keys(splashartMap).length}
+        {alreadyGuessed.length}/{LENGTH}
+        {" • "}
+        {new Date(elapsed * 1000).toISOString().substring(14, 19)} {/* mm:ss */}
       </h1>
       {pixelatedSrc && (
         // show pixelated when done

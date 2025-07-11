@@ -222,7 +222,7 @@ export const answerMap: Record<string, string[]> = {
   jinx: ["jinx"],
   ksante: ["ksante"],
   kaisa: ["kaisa"],
-  kalista: ["kalista"],
+  kalista: ["kalista, kallista"],
   karma: ["karma"],
   karthus: ["karthus"],
   kassadin: ["kassadin"],
