@@ -17,4 +17,9 @@ export async function POST(request: NextRequest) {
     INSERT INTO leaderboard (username, time, created_at)
     VALUES (${body.username}, ${body.time}, NOW())
   `;
+
+  return NextResponse.json(
+    { message: "Score added successfully." },
+    { status: 200 }
+  );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Loading from "./Loading";
 
 export default function GameOver({
   mmss,
@@ -10,9 +11,13 @@ export default function GameOver({
   seconds: number;
 }) {
   const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [recordSubmitted, setRecordSubmitted] = useState(false);
 
   const submitRecord = async () => {
     if (!username.trim()) return;
+    setLoading(true);
 
     try {
       const res = await fetch("/api/add-score", {
@@ -20,15 +25,34 @@ export default function GameOver({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
-          score: seconds,
+          time: seconds,
         }),
       });
 
       if (!res.ok) throw new Error("Request failed");
+      setRecordSubmitted(true);
     } catch (err) {
       console.error(err);
+      setError("Failed to submit record. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) return <Loading />;
+  if (recordSubmitted) {
+    return (
+      <div className="flex flex-col items-center max-w-2xl w-full font-mono">
+        <h1 className="text-2xl">Record Submitted!</h1>
+        <button
+          className="mt-4 bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded"
+          onClick={() => window.location.reload()}
+        >
+          Play Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center max-w-2xl w-full font-mono">
@@ -39,9 +63,9 @@ export default function GameOver({
         </span>
       </p>
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          submitRecord();
+          await submitRecord();
         }}
         className="flex w-full mt-8"
       >
@@ -59,6 +83,7 @@ export default function GameOver({
           Submit
         </button>
       </form>
+      <p className="text-red-500">{error}</p>
     </div>
   );
 }

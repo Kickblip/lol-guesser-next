@@ -6,6 +6,7 @@ import { answerMap, splashartMap } from "@/utils/maps";
 import GameOver from "./GameOver";
 
 const LENGTH = 10;
+const PIXELATION = 40;
 
 export default function GameWindow() {
   const [image, setImage] = useState("");
@@ -13,7 +14,7 @@ export default function GameWindow() {
   const [randomKey, setRandomKey] = useState("");
   const [guess, setGuess] = useState("");
   const [pixelatedSrc, setPixelatedSrc] = useState("");
-  const [pixelationFactor, setPixelationFactor] = useState(40);
+  const [pixelationFactor, setPixelationFactor] = useState(PIXELATION);
   const [message, setMessage] = useState("");
   const [alreadyGuessed, setAlreadyGuessed] = useState<string[]>([]);
   const [remainingChamps, setRemainingChamps] = useState<string[]>([]);
@@ -82,7 +83,7 @@ export default function GameWindow() {
   };
 
   const refreshImage = async () => {
-    setPixelationFactor(40);
+    setPixelationFactor(PIXELATION);
 
     let keys = Object.keys(splashartMap);
     let rand = "";
@@ -101,7 +102,7 @@ export default function GameWindow() {
 
     try {
       const url = `/champs/${splashartMap[rand]}`;
-      const pixelated = await pixelateImage(url, pixelationFactor);
+      const pixelated = await pixelateImage(url, PIXELATION);
       setPixelatedSrc(pixelated);
     } catch (error) {
       console.error("Pixelation error:", error);
@@ -132,8 +133,8 @@ export default function GameWindow() {
     } else {
       setMessage("❌ 😿");
       setTimeout(() => setMessage(""), 500);
-      setPenalty((p) => p + 5);
       const newFactor = Math.max(5, pixelationFactor - 5);
+      setPenalty((p) => p + 5);
       setPixelationFactor(newFactor);
 
       const pixelated = await pixelateImage(`/champs/${image}`, newFactor);
