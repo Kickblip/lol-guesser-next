@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { answerMap, splashartMap } from "@/utils/maps";
 import GameOver from "./GameOver";
+import Leaderboard from "./Leaderboard";
 
 const LENGTH = 10;
 const PIXELATION = 40;
@@ -195,12 +196,13 @@ export default function GameWindow() {
       </form>
 
       <h1
-        className={`text-5xl font-bold mt-8 ${
+        className={`text-5xl font-bold my-8 ${
           message ? "text-black" : "text-white"
         }`}
       >
         {message || "."}
       </h1>
+      <Leaderboard />
     </div>
   );
 }
