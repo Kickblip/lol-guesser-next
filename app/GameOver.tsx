@@ -5,10 +5,10 @@ import Loading from "./Loading";
 
 export default function GameOver({
   mmss,
-  seconds,
+  time,
 }: {
   mmss: string;
-  seconds: number;
+  time: number;
 }) {
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
@@ -25,7 +25,7 @@ export default function GameOver({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: username.trim(),
-          time: seconds,
+          time,
         }),
       });
 

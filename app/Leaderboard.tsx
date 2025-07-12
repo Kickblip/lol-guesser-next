@@ -54,7 +54,7 @@ export default function Leaderboard() {
         >
           <span>{i + 1}</span>
           <span>{r.username}</span>
-          <span>{new Date(r.time * 1000).toISOString().substring(14, 19)}</span>
+          <span>{new Date(r.time).toISOString().substring(14, 23)}</span>
           <span>{new Date(r.created_at).toLocaleDateString()}</span>
         </div>
       ))}

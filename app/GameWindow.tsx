@@ -116,8 +116,10 @@ export default function GameWindow() {
       const now = Date.now();
       setStartTime(now);
       timerRef.current = setInterval(
-        () => setElapsed(Math.floor((Date.now() - now) / 1000)),
-        1000
+        // () => setElapsed(Math.floor((Date.now() - now) / 1000)),
+        // 1000
+        () => setElapsed(Date.now() - now),
+        50
       );
     }
 
@@ -149,11 +151,11 @@ export default function GameWindow() {
     return <p>Loading...</p>;
   }
 
-  const displaySeconds = elapsed + penalty;
-  const mmss = new Date(displaySeconds * 1000).toISOString().substring(14, 19);
+  const displayMillis = elapsed + penalty * 1000;
+  const mmss = new Date(displayMillis).toISOString().substring(14, 23);
 
   if (gameOver) {
-    return <GameOver mmss={mmss} seconds={displaySeconds} />;
+    return <GameOver mmss={mmss} time={displayMillis} />;
   }
 
   return (
