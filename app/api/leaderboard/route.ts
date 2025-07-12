@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import { supabase } from "@/utils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
