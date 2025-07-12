@@ -335,5 +335,5 @@ export const answerMap: Record<string, string[]> = {
   briar: ["briar"],
   hwei: ["hwei"],
   smolder: ["smolder"],
-  naafiri: ["naafiri"],
+  naafiri: ["naafiri", "nafiri"],
 };
