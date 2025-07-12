@@ -16,11 +16,22 @@ export default function Leaderboard() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/leaderboard")
-      .then((r) => r.json())
-      .then((data) => setRows(data.leaderboard as Row[]))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/leaderboard", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Request failed");
+        const data = await res.json();
+        setRows((data.leaderboard as Row[]) || []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   if (loading) {
