@@ -259,7 +259,7 @@ export const answerMap: Record<string, string[]> = {
   nocturne: ["nocturne", "noc", "noct"],
   nunuandwillump: ["nunuandwillump", "nunu", "willump"],
   olaf: ["olaf"],
-  orianna: ["orianna"],
+  orianna: ["orianna", "ori", "oriana"],
   ornn: ["ornn"],
   pantheon: ["pantheon"],
   poppy: ["poppy"],
