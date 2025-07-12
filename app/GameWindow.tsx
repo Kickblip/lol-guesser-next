@@ -1,50 +1,84 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import Head from "next/head";
+import React, { useEffect, useRef, useState } from "react";
 import { answerMap, splashartMap } from "@/utils/maps";
 import GameOver from "./GameOver";
 import Leaderboard from "./Leaderboard";
+import Loading from "./Loading";
 
 const LENGTH = 10;
 const PIXELATION = 40;
 
+function usePreloadImages(srcs: string[]) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    Promise.all(
+      srcs.map(
+        (src) =>
+          new Promise<void>((res) => {
+            const img = new window.Image();
+            img.onload = img.onerror = () => res();
+            img.decode?.().catch(() => {});
+            img.src = src;
+          })
+      )
+    ).then(() => !cancelled && setReady(true));
+
+    return () => {
+      cancelled = true;
+    };
+  }, [srcs]);
+
+  return ready;
+}
+
+function pickUniqueKeys(count: number) {
+  const keys = Object.keys(splashartMap);
+  if (count > keys.length) throw new Error("Not enough splash art!");
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+  return keys.slice(0, count);
+}
+
 export default function GameWindow() {
-  const [image, setImage] = useState("");
-  const [answer, setAnswer] = useState<string[]>([]);
-  const [randomKey, setRandomKey] = useState("");
-  const [guess, setGuess] = useState("");
+  const [gameKeys] = useState<string[]>(() => pickUniqueKeys(LENGTH));
+  const imageUrls = gameKeys.map((k) => `/champs/${splashartMap[k]}`);
+
+  const ready = usePreloadImages(imageUrls);
+
+  const [index, setIndex] = useState(0); // which of the 10 are we on?
   const [pixelatedSrc, setPixelatedSrc] = useState("");
   const [pixelationFactor, setPixelationFactor] = useState(PIXELATION);
+  const [guess, setGuess] = useState("");
   const [message, setMessage] = useState("");
-  const [alreadyGuessed, setAlreadyGuessed] = useState<string[]>([]);
-  const [remainingChamps, setRemainingChamps] = useState<string[]>([]);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [elapsed, setElapsed] = useState<number>(0);
-  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const [penalty, setPenalty] = useState<number>(0);
-  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [penalty, setPenalty] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startRef = useRef<number | null>(null);
+
+  const currentKey = gameKeys[index];
+  const answer = answerMap[currentKey];
 
   useEffect(() => {
-    refreshImage();
-  }, []);
+    if (!ready) return;
+    pixelateAndSet(imageUrls[0], PIXELATION);
+  }, [ready]);
 
-  useEffect(() => {
-    if (alreadyGuessed.length === LENGTH && !gameOver) {
-      // stop timer and end the game
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = null;
-      setGameOver(true);
-    }
-  }, [alreadyGuessed, gameOver]);
+  async function pixelateAndSet(url: string, factor: number) {
+    const src = await pixelateImage(url, factor);
+    setPixelatedSrc(src);
+  }
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
-
-  const pixelateImage = (url: string, sampleSize = 10): Promise<string> => {
+  function pixelateImage(url: string, sampleSize = 10): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = document.createElement("img");
       img.crossOrigin = "anonymous";
@@ -53,128 +87,96 @@ export default function GameWindow() {
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          reject(new Error("2D context not available"));
-          return;
-        }
-
+        if (!ctx) return reject(new Error("2D context not available"));
         ctx.drawImage(img, 0, 0);
 
-        const { width, height } = canvas;
-        const imageData = ctx.getImageData(0, 0, width, height).data;
-        for (let y = 0; y < height; y += sampleSize) {
-          for (let x = 0; x < width; x += sampleSize) {
-            const p = (x + y * width) * 4;
-            const r = imageData[p];
-            const g = imageData[p + 1];
-            const b = imageData[p + 2];
-            const a = imageData[p + 3] / 255;
-            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+        for (let y = 0; y < img.height; y += sampleSize) {
+          for (let x = 0; x < img.width; x += sampleSize) {
+            const p = (x + y * img.width) * 4;
+            const data = ctx.getImageData(x, y, 1, 1).data;
+            ctx.fillStyle = `rgba(${data[0]},${data[1]},${data[2]},${
+              data[3] / 255
+            })`;
             ctx.fillRect(x, y, sampleSize, sampleSize);
           }
         }
-
-        const pixelatedUrl = canvas.toDataURL("image/jpeg");
-        resolve(pixelatedUrl);
+        resolve(canvas.toDataURL("image/jpeg"));
       };
-
       img.onerror = reject;
       img.src = url;
     });
-  };
+  }
 
-  const refreshImage = async () => {
-    setPixelationFactor(PIXELATION);
-
-    let keys = Object.keys(splashartMap);
-    let rand = "";
-    if (remainingChamps.length === 0) {
-      setRemainingChamps(keys);
-      rand = keys[Math.floor(Math.random() * keys.length)];
-    } else {
-      rand =
-        remainingChamps[Math.floor(Math.random() * remainingChamps.length)];
+  async function handleGuess() {
+    if (!timerRef.current) {
+      const start = Date.now();
+      startRef.current = start;
+      timerRef.current = setInterval(() => setElapsed(Date.now() - start), 50);
     }
 
-    setRandomKey(rand);
-
-    setImage(splashartMap[rand]);
-    setAnswer(answerMap[rand]);
-
-    try {
-      const url = `/champs/${splashartMap[rand]}`;
-      const pixelated = await pixelateImage(url, PIXELATION);
-      setPixelatedSrc(pixelated);
-    } catch (error) {
-      console.error("Pixelation error:", error);
-      setPixelatedSrc("");
-    }
-  };
-
-  const handleGuess = async () => {
-    if (startTime === null) {
-      const now = Date.now();
-      setStartTime(now);
-      timerRef.current = setInterval(
-        // () => setElapsed(Math.floor((Date.now() - now) / 1000)),
-        // 1000
-        () => setElapsed(Date.now() - now),
-        50
-      );
-    }
-
-    const formattedGuess = guess
+    const formatted = guess
       .toLowerCase()
       .replace(/[^a-z]/g, "")
       .trim();
 
-    if (answer.includes(formattedGuess)) {
+    if (answer.includes(formatted)) {
       setMessage("✅ 🎉");
       setTimeout(() => setMessage(""), 500);
-      setAlreadyGuessed((prev) => [...prev, randomKey]);
-      refreshImage();
+
+      if (index + 1 === LENGTH) {
+        clearInterval(timerRef.current!);
+        setGameOver(true);
+      } else {
+        setIndex((i) => i + 1);
+        setPixelationFactor(PIXELATION);
+        pixelateAndSet(imageUrls[index + 1], PIXELATION);
+      }
     } else {
       setMessage("❌ 😿");
       setTimeout(() => setMessage(""), 500);
       const newFactor = Math.max(5, pixelationFactor - 5);
       setPenalty((p) => p + 5);
       setPixelationFactor(newFactor);
-
-      const pixelated = await pixelateImage(`/champs/${image}`, newFactor);
-      setPixelatedSrc(pixelated);
+      pixelateAndSet(imageUrls[index], newFactor);
     }
 
     setGuess("");
-  };
-
-  if (!image || !answer) {
-    return <p>Loading...</p>;
   }
 
-  const displayMillis = elapsed + penalty * 1000;
-  const mmss = new Date(displayMillis).toISOString().substring(14, 23);
-
-  if (gameOver) {
-    return <GameOver mmss={mmss} time={displayMillis} />;
-  }
+  if (!ready || !pixelatedSrc) return <Loading />;
+  const totalMillis = elapsed + penalty * 1000;
+  const mmss = new Date(totalMillis).toISOString().substring(14, 23);
+  if (gameOver) return <GameOver mmss={mmss} time={totalMillis} />;
 
   return (
     <div className="flex flex-col items-center font-mono">
+      <Head>
+        {imageUrls.map((href) => (
+          <link
+            key={href}
+            rel="preload"
+            as="image"
+            href={href}
+            fetchPriority="high"
+          />
+        ))}
+      </Head>
+
       <h1 className="text-2xl mb-4">
-        {alreadyGuessed.length}/{LENGTH}
+        {index}/{LENGTH}
         {" • "}
         {mmss}
       </h1>
-      {pixelatedSrc && (
-        // show pixelated when done
-        <Image
-          src={pixelatedSrc}
-          alt="Guess league champ"
-          className="rounded"
-          width={700}
-          height={700}
-        />
-      )}
+
+      <Image
+        src={pixelatedSrc}
+        alt="Guess champion"
+        className="rounded"
+        width={700}
+        height={700}
+        priority
+      />
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
