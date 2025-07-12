@@ -1,22 +1,28 @@
-import { neon } from "@neondatabase/serverless";
+import { supabase } from "@/utils/supabase";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
+  const { username, time } = body;
 
-  if (!body.username || !body.time) {
+  if (!username || !time) {
     return NextResponse.json(
       { message: "Username or time is missing." },
       { status: 400 }
     );
   }
 
-  const sql = neon(process.env.DATABASE_URL!);
+  const { error } = await supabase
+    .from("leaderboard")
+    .insert([{ username, time, created_at: new Date() }]);
 
-  await sql`
-    INSERT INTO leaderboard (username, time, created_at)
-    VALUES (${body.username}, ${body.time}, NOW())
-  `;
+  if (error) {
+    console.error("[leaderboard] DB error:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json(
     { message: "Score added successfully." },
