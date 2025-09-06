@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { data, error } = await supabase
-    .from("leaderboard")
+    .from(process.env.SUPABASE_TABLE_NAME!)
     .select("*")
     .order("time", { ascending: true })
     .limit(10);

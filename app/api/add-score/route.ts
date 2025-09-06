@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { error } = await supabase
-    .from("leaderboard")
+    .from(process.env.SUPABASE_TABLE_NAME!)
     .insert([{ username, time, created_at: new Date() }]);
 
   if (error) {
